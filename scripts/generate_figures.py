@@ -57,7 +57,7 @@ def get_short_name(ds):
 # FIG 1: PID Decomposition — Stacked Bars
 # ════════════════════════════════════════════════
 n_ds = len(datasets)
-ncols = min(4, n_ds)
+ncols = 2          # always 2 columns → forces 2-row layout
 nrows = (n_ds + ncols - 1) // ncols
 
 fig, axes = plt.subplots(nrows, ncols, figsize=(4 * ncols, 4.5 * nrows), squeeze=False)
@@ -243,6 +243,7 @@ print("  ✓ fig2_sr_vs_gap.png")
 # ════════════════════════════════════════════════
 # FIG 3: Model Comparison Bars per Dataset
 # ════════════════════════════════════════════════
+# ncols / nrows are carried from FIG 1 (ncols=2 → 2-row layout)
 fig, axes = plt.subplots(nrows, ncols, figsize=(4.5 * ncols, 5 * nrows), squeeze=False)
 axes = axes.flatten()
 fig.suptitle("AUC-ROC Comparison Across Datasets", fontsize=14, fontweight='bold', y=1.02)
@@ -299,7 +300,7 @@ print("  ✓ fig3_model_comparison.png")
 # ════════════════════════════════════════════════
 # FIG 4: Ablation Effect — Entropy Adds Value?
 # ════════════════════════════════════════════════
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(9, 11))
 
 # Left: Delta AUC bars with significance
 deltas = [data[ds]["ablation_delta_auc"] for ds in datasets]
@@ -309,11 +310,25 @@ bar_colors = [C_GREEN if p < 0.05 else C_GRAY for p in pvals]
 y_pos = np.arange(len(datasets))
 bars = ax1.barh(y_pos, deltas, color=bar_colors, height=0.5, edgecolor='white')
 
+# Dynamic x-axis limits — add 40% padding so all bars + labels are visible
+min_delta = min(deltas)
+max_delta = max(deltas)
+pad_left  = abs(min_delta) * 0.55   # extra room for negative bar labels
+pad_right = abs(max_delta) * 0.55
+xlim_left  = min(min_delta - pad_left,  -0.002)
+xlim_right = max(max_delta + pad_right,  0.005)
+
 for i, (bar, delta, pval) in enumerate(zip(bars, deltas, pvals)):
     sig = "✓ p<0.05" if pval < 0.05 else f"p={pval:.2f}"
-    x = max(delta, 0) + 0.001
-    ax1.text(x, bar.get_y() + bar.get_height()/2,
-             f'Δ={delta:+.4f} ({sig})', va='center', fontsize=10,
+    # Place label to the right of positive bars, to the LEFT of negative bars
+    if delta >= 0:
+        x_text = delta + (xlim_right - xlim_left) * 0.01
+        ha = 'left'
+    else:
+        x_text = delta - (xlim_right - xlim_left) * 0.01
+        ha = 'right'
+    ax1.text(x_text, bar.get_y() + bar.get_height() / 2,
+             f'Δ={delta:+.4f} ({sig})', va='center', ha=ha, fontsize=9,
              fontweight='bold' if pval < 0.05 else 'normal')
 
 ax1.axvline(x=0, color='black', linewidth=0.8, linestyle='-')
@@ -321,9 +336,21 @@ ax1.set_yticks(y_pos)
 ax1.set_yticklabels([get_short_name(ds) for ds in datasets], fontsize=11)
 ax1.set_xlabel("Δ AUC (Full − Ablation)", fontsize=12)
 ax1.set_title("Entropy Feature Contribution", fontsize=13, fontweight='bold')
-ax1.set_xlim(-0.005, 0.025)
+ax1.set_xlim(xlim_left, xlim_right)
 
-# Right: SR vs Ablation Delta
+# Bottom: SR vs Ablation Delta
+# Per-dataset label offsets (in points) — fanned out to avoid overlap near SR≈0 cluster
+label_offsets = {
+    "AI4I":      ( 12,    8),
+    "C-MAPSS":   ( 55,   28),   # far right + up
+    "SMD":       ( 55,  -28),   # far right + down
+    "Synthetic": (-80,   28),   # far left  + up
+    "MC2":       (-80,  -28),   # far left  + down
+    "JM1":       ( 12,    8),
+    "PC1":       (-75,    8),   # left
+    "CM1":       ( 12,  -18),   # down
+}
+
 for i, ds in enumerate(datasets):
     name = get_short_name(ds)
     sr = data[ds]["synergy_ratio"]
@@ -332,12 +359,16 @@ for i, ds in enumerate(datasets):
     c = st["c"]
     ax2.scatter(sr, delta, s=180, c=c, zorder=5,
                 edgecolors='white', linewidth=2)
-    ax2.annotate(name, (sr, delta),
-                textcoords="offset points", xytext=(10, 6),
-                fontsize=11, fontweight='bold', color=c)
+    offset = label_offsets.get(name, (10, 6))
+    ax2.annotate(
+        name, (sr, delta),
+        textcoords="offset points", xytext=offset,
+        fontsize=11, fontweight='bold', color=c,
+        arrowprops=dict(arrowstyle="-", color=c, lw=0.8, alpha=0.6),
+    )
 
 ax2.axhline(y=0, color='black', linewidth=0.8, linestyle='-')
-ax2.set_xlabel(r"I$_{\min}$-SR", fontsize=12)
+ax2.set_xlabel("Imin-SR  (Synergy Ratio)", fontsize=12)
 ax2.set_ylabel("Δ AUC (Full − Ablation)", fontsize=12)
 ax2.set_title("SR Predicts Entropy Feature Value", fontsize=13, fontweight='bold')
 
