@@ -56,7 +56,8 @@ def get_short_name(ds):
 # ════════════════════════════════════════════════
 # FIG 1: PID Decomposition — Stacked Bars
 # ════════════════════════════════════════════════
-n_ds = len(datasets)
+fig1_datasets = ["JM1", "PC1", "CM1", "MC2"]
+n_ds = len(fig1_datasets)
 ncols = 2          # always 2 columns → forces 2-row layout
 nrows = (n_ds + ncols - 1) // ncols
 
@@ -71,7 +72,7 @@ components = [
     ("Synergy", C_RED),
 ]
 
-for idx, ds in enumerate(datasets):
+for idx, ds in enumerate(fig1_datasets):
     ax = axes[idx]
     pids = data[ds]["pairwise_pids"]
     pair_labels = [p["pair"].replace("×", " ×\n") for p in pids]
@@ -243,7 +244,11 @@ print("  ✓ fig2_sr_vs_gap.png")
 # ════════════════════════════════════════════════
 # FIG 3: Model Comparison Bars per Dataset
 # ════════════════════════════════════════════════
-# ncols / nrows are carried from FIG 1 (ncols=2 → 2-row layout)
+fig3_datasets = ["JM1", "PC1", "CM1", "MC2"]
+n_ds = len(fig3_datasets)
+ncols = 2          # always 2 columns → forces 2-row layout
+nrows = (n_ds + ncols - 1) // ncols
+
 fig, axes = plt.subplots(nrows, ncols, figsize=(4.5 * ncols, 5 * nrows), squeeze=False)
 axes = axes.flatten()
 fig.suptitle("AUC-ROC Comparison Across Datasets", fontsize=14, fontweight='bold', y=1.02)
@@ -251,7 +256,7 @@ fig.suptitle("AUC-ROC Comparison Across Datasets", fontsize=14, fontweight='bold
 methods = ["Ours (Full)", "Ours (Ablation)", "Naive Bayes", "Logistic Reg.", "Random Forest", "XGBoost (GB)"]
 method_colors = [C_RED, C_ORANGE, C_GRAY, C_GRAY, C_BLUE, C_PURPLE]
 
-for idx, ds in enumerate(datasets):
+for idx, ds in enumerate(fig3_datasets):
     ax = axes[idx]
     aucs = [
         data[ds]["full_auc_mean"],
@@ -300,14 +305,15 @@ print("  ✓ fig3_model_comparison.png")
 # ════════════════════════════════════════════════
 # FIG 4: Ablation Effect — Entropy Adds Value?
 # ════════════════════════════════════════════════
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(9, 11))
+fig4_datasets = ["JM1", "PC1", "CM1", "MC2"]
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
 
 # Left: Delta AUC bars with significance
-deltas = [data[ds]["ablation_delta_auc"] for ds in datasets]
-pvals = [data[ds]["ablation_p_value"] for ds in datasets]
+deltas = [data[ds]["ablation_delta_auc"] for ds in fig4_datasets]
+pvals = [data[ds]["ablation_p_value"] for ds in fig4_datasets]
 bar_colors = [C_GREEN if p < 0.05 else C_GRAY for p in pvals]
 
-y_pos = np.arange(len(datasets))
+y_pos = np.arange(len(fig4_datasets))
 bars = ax1.barh(y_pos, deltas, color=bar_colors, height=0.5, edgecolor='white')
 
 # Dynamic x-axis limits — add 40% padding so all bars + labels are visible
@@ -333,41 +339,39 @@ for i, (bar, delta, pval) in enumerate(zip(bars, deltas, pvals)):
 
 ax1.axvline(x=0, color='black', linewidth=0.8, linestyle='-')
 ax1.set_yticks(y_pos)
-ax1.set_yticklabels([get_short_name(ds) for ds in datasets], fontsize=11)
+ax1.set_yticklabels([get_short_name(ds) for ds in fig4_datasets], fontsize=11)
 ax1.set_xlabel("Δ AUC (Full − Ablation)", fontsize=12)
 ax1.set_title("Entropy Feature Contribution", fontsize=13, fontweight='bold')
 ax1.set_xlim(xlim_left, xlim_right)
 
-# Bottom: SR vs Ablation Delta
-# Per-dataset label offsets (in points) — fanned out to avoid overlap near SR≈0 cluster
-label_offsets = {
-    "AI4I":      ( 12,    8),
-    "C-MAPSS":   ( 55,   28),   # far right + up
-    "SMD":       ( 55,  -28),   # far right + down
-    "Synthetic": (-80,   28),   # far left  + up
-    "MC2":       (-80,  -28),   # far left  + down
-    "JM1":       ( 12,    8),
-    "PC1":       (-75,    8),   # left
-    "CM1":       ( 12,  -18),   # down
+# Right: SR vs Ablation Delta
+# Custom styles to match the desired shapes/colors: JM1 (red circle), PC1 (blue square), CM1 (purple triangle), MC2 (green diamond)
+fig4_styles = {
+    "JM1": {"c": "#C0392B", "marker": "o", "s": 220},
+    "PC1": {"c": "#1A6EA8", "marker": "s", "s": 180},
+    "CM1": {"c": "#7B3DAE", "marker": "^", "s": 200},
+    "MC2": {"c": "#1A8A55", "marker": "D", "s": 180},
 }
 
-for i, ds in enumerate(datasets):
+for ds in fig4_datasets:
     name = get_short_name(ds)
     sr = data[ds]["synergy_ratio"]
     delta = data[ds]["ablation_delta_auc"]
-    st = style.get(name, {"c": C_BLUE})
+    st = fig4_styles.get(name, {"c": C_BLUE, "marker": "o", "s": 180})
     c = st["c"]
-    ax2.scatter(sr, delta, s=180, c=c, zorder=5,
-                edgecolors='white', linewidth=2)
-    offset = label_offsets.get(name, (10, 6))
+    marker = st["marker"]
+    size = st["s"]
+    ax2.scatter(sr, delta, s=size, c=c, marker=marker, zorder=5,
+                edgecolors='white', linewidth=1.5)
     ax2.annotate(
         name, (sr, delta),
-        textcoords="offset points", xytext=offset,
+        textcoords="offset points", xytext=(10, -4),
         fontsize=11, fontweight='bold', color=c,
-        arrowprops=dict(arrowstyle="-", color=c, lw=0.8, alpha=0.6),
     )
 
 ax2.axhline(y=0, color='black', linewidth=0.8, linestyle='-')
+ax2.set_xlim(-0.02, 0.55)
+ax2.set_ylim(min(deltas) - 0.003, 0.001)
 ax2.set_xlabel("Imin-SR  (Synergy Ratio)", fontsize=12)
 ax2.set_ylabel("Δ AUC (Full − Ablation)", fontsize=12)
 ax2.set_title("SR Predicts Entropy Feature Value", fontsize=13, fontweight='bold')
