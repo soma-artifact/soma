@@ -8,7 +8,7 @@ This guide explains how to add new datasets or models to the SOMA framework with
 
 ### Step 1: Create a Loader
 
-Create a new file in `soma/datasets/`, e.g. `soma/datasets/my_dataset_loader.py`:
+Create a new file in `datasets/`, e.g. `datasets/my_dataset_loader.py`:
 
 ```python
 import os
@@ -38,7 +38,7 @@ def load_my_dataset(
     """
     if data_dir is None:
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        data_dir = os.path.join(os.path.dirname(base), "data", "my_dataset")
+        data_dir = os.path.join(base, "datasets", "my_dataset")
 
     # Load your data here
     # ...
@@ -57,15 +57,15 @@ def load_my_dataset_grouped(
 
 ### Step 2: Place Your Data
 
-Put your data file in `data/my_dataset/`.
+Put your data file in `datasets/my_dataset/`.
 
 ### Step 3: Register in run_all.py
 
-Add your dataset to the `run_all_experiments()` function in `experiments/run_all.py`:
+Add your dataset to the `run_all_experiments()` function in `scripts/run_all.py`:
 
 ```python
 elif ds_name == "MyDataset":
-    from soma.datasets.my_dataset_loader import load_my_dataset, load_my_dataset_grouped
+    from datasets.my_dataset_loader import load_my_dataset, load_my_dataset_grouped
     X, y, _, groups_idx = load_my_dataset()
     groups_raw, _ = load_my_dataset_grouped()
 ```
@@ -73,14 +73,14 @@ elif ds_name == "MyDataset":
 ### Step 4: Run
 
 ```bash
-python experiments/run_all.py --dataset MyDataset
+python scripts/run_all.py --dataset MyDataset
 ```
 
 ---
 
 ## Adding a New Baseline Model
 
-In `experiments/run_all.py`, add to the `baselines` dict in `evaluate_baselines()`:
+In `scripts/run_all.py`, add to the `baselines` dict in `evaluate_baselines()`:
 
 ```python
 baselines = {
@@ -96,9 +96,9 @@ The framework will automatically handle CV splits, SMOTE, scaling, and metric co
 ## Key Principle: Don't Touch Existing Code
 
 When extending:
-- ✅ Add new files in `soma/datasets/`
+- ✅ Add new files in `datasets/`
 - ✅ Add new entries to experiment runners
-- ✅ Create new experiment scripts in `experiments/`
-- ❌ Don't modify `soma/core/` (the core algorithms)
+- ✅ Create new experiment scripts in `experiments/` or `scripts/`
+- ❌ Don't modify `soma_classifier/` or `sr_computation/` (the core algorithms)
 - ❌ Don't change existing dataset loaders
 - ❌ Don't alter hyperparameters in existing experiments
