@@ -143,11 +143,11 @@ To verify the pipeline execution on a lightweight task before running full bench
 - **Linux & macOS**:
   ```bash
   source .venv/bin/activate
-  python scripts/run_sr_diagnostic.py --dataset synthetic
+  python scripts/run_sr_diagnostic.py --dataset Synthetic
   ```
 - **Windows (PowerShell)**:
   ```powershell
-  python scripts\run_sr_diagnostic.py --dataset synthetic
+  python scripts\run_sr_diagnostic.py --dataset Synthetic
   ```
 
 - **Expected Output**: The script prints the Synergy Ratio value, 95% Confidence Intervals, and PID atom breakdown (redundancy, unique info, synergy) to the console.
@@ -164,7 +164,7 @@ The table below maps each paper table and figure to the exact script command tha
 | Paper Element | Description | Execution Command (Linux/macOS) | Windows Command | Expected Output | Expected Runtime (8-core CPU) |
 |---|---|---|---|---|---|
 | Table I | Classification Performance (AUC, MCC, F1, Brier) | `python scripts/run_soma_evaluation.py` | `python scripts\run_soma_evaluation.py` | Outputs metrics table; saves JSON to `results/tables/experiment_results.json` | ~15 minutes |
-| Table II (Top) | Synergy Ratio (SR) Diagnostic on Primary Datasets | `python scripts/run_sr_diagnostic.py` | `python scripts\run_sr_diagnostic.py` | Prints SR value, 95% CI, and PID atom breakdown; saves to `results/tables/broja_sr_results.json` | ~3 minutes |
+| Table II (Top) | Synergy Ratio (SR) Diagnostic on Primary Datasets | `python scripts/run_sr_diagnostic.py` | `python scripts\run_sr_diagnostic.py` | Prints SR value, 95% CI, and PID atom breakdown (defaults to running all 8 datasets sequentially); saves to `results/tables/broja_sr_results.json` | ~3 minutes |
 | Table II (Bottom) | Synergy Ratio (SR) Diagnostic on NASA Defect datasets | `python scripts/run_full_experiments.py` | `python scripts\run_full_experiments.py` | Prints SR and SOMA evaluation statistics to console | ~2 minutes |
 | Table III | Synergy Ratio Estimator Consistency Check | `python experiments/multi_estimator_sr.py` | `python experiments\multi_estimator_sr.py` | Prints consistency table; saves JSON to `results/tables/multi_estimator_sr.json` | ~15 seconds |
 | Table IV | Feature Ablation study and Paired t-Test | `python scripts/run_ablation.py` | `python scripts\run_ablation.py` | Prints paired t-test results and p-values to console | ~2 minutes |
