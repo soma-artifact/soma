@@ -6,18 +6,24 @@ This codebase implements the Synergy Ratio (SR) diagnostic derived from Partial 
 
 ## 1. System Requirements
 
-- **Tested Operating System**: Ubuntu 22.04 LTS / Linux (x86_64)
+- **Supported Operating Systems**:
+  - **Linux**: Tested on Ubuntu 22.04 LTS (x86_64)
+  - **macOS**: Tested on macOS 13 (Ventura) / 14 (Sonoma) on Apple Silicon and Intel architectures
+  - **Windows**: Tested on Windows 10 / 11 (x86_64)
 - **Minimum RAM**: 8 GB RAM (16 GB recommended for high-dimensional bootstrap routines)
 - **Disk Space**: Approximately 100 MB free space
-- **Prerequisites**:
-  - Python 3.10 or higher
-  - GCC (required to compile C extensions for the `dit` information theory dependency library)
+- **Prerequisites (C Compiler Setup)**:
+  - Compiling C extensions for the `dit` information theory library requires a C compiler:
+    - **Linux**: Install GCC (e.g. `sudo apt-get install build-essential python3-dev`)
+    - **macOS**: Install Xcode Command Line Tools (run `xcode-select --install` in terminal)
+    - **Windows**: Install Microsoft Visual C++ 14.0 or greater (available via Visual Studio Build Tools)
+  - **Python**: Version 3.10 or higher installed and added to the system path
 
 ---
 
 ## 2. Cloning the Repository
 
-To clone this repository and enter the workspace directory, run:
+To clone this repository and enter the workspace directory, run in your terminal:
 
 ```bash
 git clone https://github.com/soma-artifact/soma.git
@@ -73,9 +79,9 @@ The code is organized as follows:
 │   ├── technical_explanation.md#   Semantic groupings and pipeline explanations
 │   └── extending.md            #   Guide to adding new datasets/models
 │
-├── setup.sh                    # Preconfigured virtual environment setup shell script
-├── reproduce_all.sh            # Top-level bash runner executing complete replication suite
-├── reproduce_all.py            # Master Python orchestrator running full execution pipeline
+├── setup.sh                    # Preconfigured virtual environment setup shell script (Linux/macOS)
+├── reproduce_all.sh            # Top-level bash runner executing complete replication suite (Linux/macOS)
+├── reproduce_all.py            # Master Python orchestrator running full execution pipeline (All OS)
 ├── requirements.txt            # Python package dependency definitions
 └── LICENSE                     # Project License
 ```
@@ -84,23 +90,31 @@ The code is organized as follows:
 
 ## 4. Setup Instructions
 
-The repository relies on standard scientific Python libraries. A preconfigured virtual environment setup script is provided.
+The repository relies on standard scientific Python libraries. Preconfigured workspace setup tools are provided for all environments.
 
 ### Virtual Environment Setup
 
+#### On Linux & macOS
 To create the virtual environment and install all dependencies automatically:
-
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
-Alternatively, to set up the environment manually:
+#### On Windows (PowerShell)
+To initialize the environment manually:
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
+#### On Windows (Command Prompt)
+```cmd
+python -m venv .venv
+.venv\Scripts\activate.bat
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -108,10 +122,15 @@ pip install -r requirements.txt
 
 Before running any experiments, verify that the virtual environment is correctly built and dependencies compile without issues:
 
-```bash
-source .venv/bin/activate
-python3 -c "import dit, sklearn, numpy, scipy; print('Environment OK')"
-```
+- **Linux & macOS**:
+  ```bash
+  source .venv/bin/activate
+  python3 -c "import dit, sklearn, numpy, scipy; print('Environment OK')"
+  ```
+- **Windows**:
+  ```cmd
+  python -c "import dit, sklearn, numpy, scipy; print('Environment OK')"
+  ```
 
 If it prints `Environment OK`, all dependencies (including compiled C extensions for `dit`) are ready.
 
@@ -121,10 +140,15 @@ If it prints `Environment OK`, all dependencies (including compiled C extensions
 
 To verify the pipeline execution on a lightweight task before running full benchmarks, execute the diagnostic utility on the synthetic dataset:
 
-```bash
-source .venv/bin/activate
-python scripts/run_sr_diagnostic.py --dataset synthetic
-```
+- **Linux & macOS**:
+  ```bash
+  source .venv/bin/activate
+  python scripts/run_sr_diagnostic.py --dataset synthetic
+  ```
+- **Windows (PowerShell)**:
+  ```powershell
+  python scripts\run_sr_diagnostic.py --dataset synthetic
+  ```
 
 - **Expected Output**: The script prints the Synergy Ratio value, 95% Confidence Intervals, and PID atom breakdown (redundancy, unique info, synergy) to the console.
 - **Expected Runtime**: Under 60 seconds on a standard modern CPU.
@@ -137,25 +161,31 @@ The table below maps each paper table and figure to the exact script command tha
 
 **Dependency Order**: Run the evaluation scripts (e.g. `run_soma_evaluation.py`, `run_full_experiments.py`, `multi_estimator_sr.py`, `run_ablation.py`) first. These scripts save intermediate JSON result files to `results/tables/`. The figure generator script `generate_figures.py` loads these intermediate results to plot the publication-ready graphics. Therefore, running `generate_figures.py` before executing the evaluations will raise file-not-found errors.
 
-| Paper Element | Description | Execution Command | Expected Output | Expected Runtime (8-core CPU) |
-|---|---|---|---|---|
-| Table I | Classification Performance (AUC, MCC, F1, Brier) | `python scripts/run_soma_evaluation.py` | Outputs metrics table to console; saves JSON results to `results/tables/experiment_results.json` | ~15 minutes |
-| Table II (Top) | Synergy Ratio (SR) Diagnostic on Primary Datasets | `python scripts/run_sr_diagnostic.py` | Prints SR value, 95% CI, and PID atom breakdown to console; saves to `results/tables/broja_sr_results.json` | ~3 minutes |
-| Table II (Bottom) | Synergy Ratio (SR) Diagnostic on NASA Software defect datasets | `python scripts/run_full_experiments.py` | Prints SR and SOMA evaluation statistics to console | ~2 minutes |
-| Table III | Synergy Ratio Estimator Consistency Check (BROJA, Imin, CoI) | `python experiments/multi_estimator_sr.py` | Prints consistency table comparing estimators to console; saves JSON to `results/tables/multi_estimator_sr.json` | ~15 seconds |
-| Table IV | Feature Ablation study (Full 12D vs 3D) and Paired t-Test | `python scripts/run_ablation.py` | Prints paired t-test results and p-values to console | ~2 minutes |
-| Figures 1–5 | Generation of all publication-ready PNG figures | `python scripts/generate_figures.py` | Generates 5 PNG files saved under `results/figures/` | ~5 seconds |
+| Paper Element | Description | Execution Command (Linux/macOS) | Windows Command | Expected Output | Expected Runtime (8-core CPU) |
+|---|---|---|---|---|---|
+| Table I | Classification Performance (AUC, MCC, F1, Brier) | `python scripts/run_soma_evaluation.py` | `python scripts\run_soma_evaluation.py` | Outputs metrics table; saves JSON to `results/tables/experiment_results.json` | ~15 minutes |
+| Table II (Top) | Synergy Ratio (SR) Diagnostic on Primary Datasets | `python scripts/run_sr_diagnostic.py` | `python scripts\run_sr_diagnostic.py` | Prints SR value, 95% CI, and PID atom breakdown; saves to `results/tables/broja_sr_results.json` | ~3 minutes |
+| Table II (Bottom) | Synergy Ratio (SR) Diagnostic on NASA Defect datasets | `python scripts/run_full_experiments.py` | `python scripts\run_full_experiments.py` | Prints SR and SOMA evaluation statistics to console | ~2 minutes |
+| Table III | Synergy Ratio Estimator Consistency Check | `python experiments/multi_estimator_sr.py` | `python experiments\multi_estimator_sr.py` | Prints consistency table; saves JSON to `results/tables/multi_estimator_sr.json` | ~15 seconds |
+| Table IV | Feature Ablation study and Paired t-Test | `python scripts/run_ablation.py` | `python scripts\run_ablation.py` | Prints paired t-test results and p-values to console | ~2 minutes |
+| Figures 1–5 | Generation of all publication-ready PNG figures | `python scripts/generate_figures.py` | `python scripts\generate_figures.py` | Generates 5 PNG files saved under `results/figures/` | ~5 seconds |
 
 ### Full Replication Execution
 
+#### On Linux & macOS
 To execute the entire verification pipeline at once, run:
-
 ```bash
 chmod +x reproduce_all.sh
 ./reproduce_all.sh
 ```
 
-`reproduce_all.py` is the actual Python execution orchestrator. `reproduce_all.sh` is a shell wrapper that activates the virtual environment `.venv` and then executes `reproduce_all.py`. Running `./reproduce_all.sh` executes the entire pipeline, including all setup verifications and experiment runs, in approximately 10 minutes.
+#### On Windows
+To execute the entire verification pipeline at once, run:
+```cmd
+python reproduce_all.py
+```
+
+`reproduce_all.py` is the actual Python execution orchestrator. On Linux/macOS, `reproduce_all.sh` is a shell wrapper that activates the virtual environment `.venv` and then executes `reproduce_all.py`. On Windows, execute `reproduce_all.py` directly within your activated environment. Running the full reproduction executes the entire pipeline, including all setup verifications and experiment runs, in approximately 10 minutes.
 
 ---
 
