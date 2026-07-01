@@ -151,7 +151,7 @@ To verify the pipeline execution on a lightweight task before running full bench
   ```
 
 - **Expected Output**: The script prints the Synergy Ratio value, 95% Confidence Intervals, and PID atom breakdown (redundancy, unique info, synergy) to the console.
-- **Expected Runtime**: Under 60 seconds on a standard modern CPU.
+- **Expected Runtime**: Under 3 minutes on a standard modern CPU (as the BROJA estimator solver runs and safely falls back to the Williams-Beer I_min estimator).
 
 ---
 
