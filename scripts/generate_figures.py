@@ -246,10 +246,10 @@ print("  ✓ fig2_sr_vs_gap.png")
 # ════════════════════════════════════════════════
 fig3_datasets = ["JM1", "PC1", "CM1", "MC2"]
 n_ds = len(fig3_datasets)
-ncols = 2          # always 2 columns → forces 2-row layout
+ncols = 2          # 2 columns → forces 2x2 grid
 nrows = (n_ds + ncols - 1) // ncols
 
-fig, axes = plt.subplots(nrows, ncols, figsize=(4.5 * ncols, 5 * nrows), squeeze=False)
+fig, axes = plt.subplots(nrows, ncols, figsize=(10, 6.5), squeeze=False)
 axes = axes.flatten()
 fig.suptitle("AUC-ROC Comparison Across Datasets", fontsize=14, fontweight='bold', y=1.02)
 
@@ -279,16 +279,18 @@ for idx, ds in enumerate(fig3_datasets):
     bars = ax.barh(y_pos, aucs, xerr=stds, color=method_colors, height=0.6,
                    edgecolor='white', linewidth=0.5, capsize=3)
 
-    for bar, auc in zip(bars, aucs):
-        ax.text(bar.get_width() + 0.002, bar.get_y() + bar.get_height()/2,
-                f'{auc:.3f}', va='center', fontsize=8, color='#374151')
+    for bar, auc, std in zip(bars, aucs, stds):
+        # Place text to the right of the error bar to prevent the line from cutting it
+        x_pos = auc + std + 0.005
+        ax.text(x_pos, bar.get_y() + bar.get_height()/2,
+                f'{auc:.3f}', va='center', ha='left', fontsize=10, fontweight='bold', color='#111827')
 
     sr = data[ds]["synergy_ratio"]
     ax.set_title(f"{get_short_name(ds)} (SR={sr:.3f})", fontsize=11, fontweight='bold')
     ax.set_xlim(0.65, 1.02)
     if idx % ncols == 0:
         ax.set_yticks(y_pos)
-        ax.set_yticklabels(methods, fontsize=9)
+        ax.set_yticklabels(methods, fontsize=11, fontweight='bold')
     else:
         ax.set_yticks([])
 
@@ -306,7 +308,7 @@ print("  ✓ fig3_model_comparison.png")
 # FIG 4: Ablation Effect — Entropy Adds Value?
 # ════════════════════════════════════════════════
 fig4_datasets = ["JM1", "PC1", "CM1", "MC2"]
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.8))
 
 # Left: Delta AUC bars with significance
 deltas = [data[ds]["ablation_delta_auc"] for ds in fig4_datasets]
@@ -334,15 +336,18 @@ for i, (bar, delta, pval) in enumerate(zip(bars, deltas, pvals)):
         x_text = delta - (xlim_right - xlim_left) * 0.01
         ha = 'right'
     ax1.text(x_text, bar.get_y() + bar.get_height() / 2,
-             f'Δ={delta:+.4f} ({sig})', va='center', ha=ha, fontsize=9,
-             fontweight='bold' if pval < 0.05 else 'normal')
+             f'Δ={delta:+.4f} ({sig})', va='center', ha=ha, fontsize=11,
+             fontweight='bold', color='#111827')
 
 ax1.axvline(x=0, color='black', linewidth=0.8, linestyle='-')
 ax1.set_yticks(y_pos)
-ax1.set_yticklabels([get_short_name(ds) for ds in fig4_datasets], fontsize=11)
-ax1.set_xlabel("Δ AUC (Full − Ablation)", fontsize=12)
+ax1.set_yticklabels([get_short_name(ds) for ds in fig4_datasets], fontsize=11, fontweight='bold')
+ax1.set_xlabel("Δ AUC (Full − Ablation)", fontsize=12, fontweight='bold')
 ax1.set_title("Entropy Feature Contribution", fontsize=13, fontweight='bold')
 ax1.set_xlim(xlim_left, xlim_right)
+for label in ax1.get_xticklabels():
+    label.set_fontsize(11)
+    label.set_fontweight('bold')
 
 # Right: SR vs Ablation Delta
 # Custom styles to match the desired shapes/colors: JM1 (red circle), PC1 (blue square), CM1 (purple triangle), MC2 (green diamond)
@@ -372,9 +377,15 @@ for ds in fig4_datasets:
 ax2.axhline(y=0, color='black', linewidth=0.8, linestyle='-')
 ax2.set_xlim(-0.02, 0.55)
 ax2.set_ylim(min(deltas) - 0.003, 0.001)
-ax2.set_xlabel("Imin-SR  (Synergy Ratio)", fontsize=12)
-ax2.set_ylabel("Δ AUC (Full − Ablation)", fontsize=12)
+ax2.set_xlabel("Imin-SR  (Synergy Ratio)", fontsize=12, fontweight='bold')
+ax2.set_ylabel("Δ AUC (Full − Ablation)", fontsize=12, fontweight='bold')
 ax2.set_title("SR Predicts Entropy Feature Value", fontsize=13, fontweight='bold')
+for label in ax2.get_xticklabels():
+    label.set_fontsize(11)
+    label.set_fontweight('bold')
+for label in ax2.get_yticklabels():
+    label.set_fontsize(11)
+    label.set_fontweight('bold')
 
 plt.tight_layout()
 fig.savefig(os.path.join(FIGURES_DIR, "fig4_ablation.png"), dpi=300, bbox_inches='tight')
