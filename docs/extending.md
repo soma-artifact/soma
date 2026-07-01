@@ -96,9 +96,9 @@ The framework will automatically handle CV splits, SMOTE, scaling, and metric co
 ## Key Principle: Don't Touch Existing Code
 
 When extending:
-- ✅ Add new files in `datasets/`
-- ✅ Add new entries to experiment runners
-- ✅ Create new experiment scripts in `experiments/` or `scripts/`
-- ❌ Don't modify `soma_classifier/` or `sr_computation/` (the core algorithms)
-- ❌ Don't change existing dataset loaders
-- ❌ Don't alter hyperparameters in existing experiments
+- Add new files in `datasets/`
+- Add new entries to experiment runners
+- Create new experiment scripts in `experiments/` or `scripts/`
+- Don't modify `soma_classifier/` or `sr_computation/` (the core algorithms)
+- Don't change existing dataset loaders
+- Don't alter hyperparameters in existing experiments

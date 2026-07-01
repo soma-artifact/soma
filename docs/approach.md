@@ -1,6 +1,6 @@
-# PID Architecture Selection Diagnostic — New Approach
+# PID Architecture Selection Diagnostic
 
-## 1. Paper Thesis (One Sentence)
+## 1. Paper Thesis
 
 **We provide a principled, information-theoretic method (the Synergy Ratio) to diagnose the synergy structure of sensor groups *before* model selection, so you choose the right architecture for the right system rather than defaulting to XGBoost everywhere.**
 
@@ -8,12 +8,7 @@
 
 ## 2. What Changed From The Old Approach
 
-### Old Narrative (Weak)
-- "Our bi-level SGD beats Naive Bayes on AI4I" → reviewer response: "but it loses to RF and XGBoost, so why would I use it?"
-
-### New Narrative (Strong)
 - "Here's a diagnostic that tells you *a priori* whether your failure domain has enough cross-group synergy to justify XGBoost's complexity, or whether our simpler interpretable model is sufficient."
-- The contribution is **the diagnostic method**, not the classifier.
 
 ---
 
@@ -85,37 +80,11 @@ $$SR = \frac{\sum_{i < j} \text{Syn}(X_i, X_j; Y)}{\sum_k I(X_k; Y)}$$
 - Groups: Compute, Memory, Network
 - Expected: Redundant monitoring metrics → LOW synergy ✓
 
----
 
-## 6. Future Work (Kafka Dataset)
-
-The paper will be significantly strengthened by a **real Kafka failure dataset**:
-
-- 3-broker cluster with JMX Exporter + Prometheus scraping
-- Fault injection: broker kill, network partition, disk throttle, consumer crash
-- 150-200 fault episodes across 4 fault types
-- JMX metrics mapped to 3 semantic groups: Broker health, Consumer group, Network/partition
-
-This is planned for a follow-up study once lab infrastructure is available. The synthetic cascading dataset demonstrates the diagnostic's discriminative power for now.
 
 ---
 
-## 7. Paper Structure (Target: FSE 2027 / DSN 2027)
-
-| Section | Content | Status |
-|---------|---------|:------:|
-| §1 Introduction | Failure detection lacks principled model selection | To write |
-| §2 Framework | Entropy-KL meta-features + PID Synergy Ratio | ✅ Implemented |
-| §3 Proposition | When SR is low vs high (formal) | ✅ Written |
-| §4 Datasets | AI4I, C-MAPSS, Synthetic, SMD | ✅ Ready |
-| §5 Experiments | SR diagnostic + classification | ✅ Results obtained |
-| §6 Ablation | t-tests, SR as predictor of fusion benefit | ✅ Results obtained |
-| §7 Related Work | PID in ML, multi-view learning | To write |
-| §8 Conclusion | SR diagnostic as contribution | To write |
-
----
-
-## 8. Codebase Location
+## 6. Codebase Location
 
 All code is organized as follows:
 
@@ -148,7 +117,6 @@ All code is organized as follows:
 │
 ├── experiments/                # Research analysis and consistency checks
 │   ├── multi_estimator_sr.py   #   Estimator consistency comparison (BROJA, Imin, CoI)
-│   ├── run_surprisingness_sr.py#   Surprisingness-weighted Synergy Ratio checks
 │   └── benchmark_efficiency.py #   Execution time, memory, and model size benchmarks
 │
 ├── results/                    # Generated outputs

@@ -10,9 +10,8 @@ Steps:
     1. Primary Datasets Evaluation (AI4I, C-MAPSS, SMD, Synthetic)
     2. NASA PROMISE Datasets Evaluation (CM1, JM1, PC1, MC2)
     3. Multi-Estimator Synergy Ratio Consistency Checks
-    4. Surprisingness-Weighted SR Checks
-    5. Efficiency Benchmarks
-    6. Figure Generation
+    4. Efficiency Benchmarks
+    5. Figure Generation
 
 Usage:
     python reproduce_all.py
@@ -69,19 +68,13 @@ def main():
         "Multi-Estimator SR Consistency"
     )
     
-    # 4. Surprisingness-weighted SR
-    timings["surprisingness"] = run_command(
-        ["python", "experiments/run_surprisingness_sr.py"],
-        "Surprisingness-Weighted SR Analysis"
-    )
-    
-    # 5. Efficiency benchmarks
+    # 4. Efficiency benchmarks
     timings["efficiency"] = run_command(
         ["python", "experiments/benchmark_efficiency.py"],
         "Efficiency Benchmarking"
     )
     
-    # 6. Generate figures
+    # 5. Generate figures
     timings["figures"] = run_command(
         ["python", "scripts/generate_figures.py"],
         "Regenerating Figures"

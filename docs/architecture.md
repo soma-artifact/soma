@@ -1,4 +1,4 @@
-# SOMA Architecture — Paper-to-Code Mapping
+# SOMA Architecture -
 
 ## Pipeline Overview
 

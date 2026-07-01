@@ -37,7 +37,6 @@ The code is organized as follows:
 │
 ├── experiments/                # Research analysis and consistency checks
 │   ├── multi_estimator_sr.py   #   Estimator consistency comparison (BROJA, Imin, CoI)
-│   ├── run_surprisingness_sr.py#   Surprisingness-weighted Synergy Ratio checks
 │   └── benchmark_efficiency.py #   Execution time, memory, and model size benchmarks
 │
 ├── results/                    # Generated outputs
@@ -128,7 +127,6 @@ To run the entire pipeline at once, execute the master shell script:
 | `soma_classifier/bilevel_sgd.py` | Specialist training (inner SGDs) and Generalist Meta-Classifier (outer SGD) | Section IV (Algorithms 2 and 3) |
 | `datasets/promise_loader_base.py` | Shared utility base class for loading software defect metrics | Section VI-E |
 | `experiments/multi_estimator_sr.py` | Verifies SR stability across different mutual information estimators | Section V-D (Table III) |
-| `experiments/run_surprisingness_sr.py` | Computes surprisingness-weighted Synergy Ratio corrections | Section V-C |
 | `experiments/benchmark_efficiency.py` | Measures execution speed, model parameter sizes, and memory usage | Section VI-D, Section V-E |
 
 ---
