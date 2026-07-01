@@ -246,10 +246,10 @@ print("  ✓ fig2_sr_vs_gap.png")
 # ════════════════════════════════════════════════
 fig3_datasets = ["JM1", "PC1", "CM1", "MC2"]
 n_ds = len(fig3_datasets)
-ncols = 2          # 2 columns → forces 2x2 grid
-nrows = (n_ds + ncols - 1) // ncols
+ncols = 1          # 1 column → vertical stack
+nrows = n_ds
 
-fig, axes = plt.subplots(nrows, ncols, figsize=(10, 6.5), squeeze=False)
+fig, axes = plt.subplots(nrows, ncols, figsize=(8, 4.0 * nrows), squeeze=False)
 axes = axes.flatten()
 fig.suptitle("AUC-ROC Comparison Across Datasets", fontsize=14, fontweight='bold', y=1.02)
 
@@ -288,11 +288,8 @@ for idx, ds in enumerate(fig3_datasets):
     sr = data[ds]["synergy_ratio"]
     ax.set_title(f"{get_short_name(ds)} (SR={sr:.3f})", fontsize=11, fontweight='bold')
     ax.set_xlim(0.65, 1.02)
-    if idx % ncols == 0:
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(methods, fontsize=11, fontweight='bold')
-    else:
-        ax.set_yticks([])
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(methods, fontsize=11, fontweight='bold')
 
 # Hide unused subplots
 for idx in range(n_ds, len(axes)):
@@ -308,7 +305,7 @@ print("  ✓ fig3_model_comparison.png")
 # FIG 4: Ablation Effect — Entropy Adds Value?
 # ════════════════════════════════════════════════
 fig4_datasets = ["JM1", "PC1", "CM1", "MC2"]
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.8))
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 10))
 
 # Left: Delta AUC bars with significance
 deltas = [data[ds]["ablation_delta_auc"] for ds in fig4_datasets]
