@@ -4,7 +4,29 @@ This codebase implements the Synergy Ratio (SR) diagnostic derived from Partial 
 
 ---
 
-## 1. Repository Structure
+## 1. System Requirements
+
+- **Tested Operating System**: Ubuntu 22.04 LTS / Linux (x86_64)
+- **Minimum RAM**: 8 GB RAM (16 GB recommended for high-dimensional bootstrap routines)
+- **Disk Space**: Approximately 100 MB free space
+- **Prerequisites**:
+  - Python 3.10 or higher
+  - GCC (required to compile C extensions for the `dit` information theory dependency library)
+
+---
+
+## 2. Cloning the Repository
+
+To clone this repository and enter the workspace directory, run:
+
+```bash
+git clone https://github.com/soma-artifact/soma.git
+cd soma
+```
+
+---
+
+## 3. Repository Structure
 
 The code is organized as follows:
 
@@ -50,22 +72,23 @@ The code is organized as follows:
 │   ├── mathematical_explanation.md # Step-by-step algebraic breakdown of SOMA features
 │   ├── technical_explanation.md#   Semantic groupings and pipeline explanations
 │   └── extending.md            #   Guide to adding new datasets/models
+│
+├── setup.sh                    # Preconfigured virtual environment setup shell script
+├── reproduce_all.sh            # Top-level bash runner executing complete replication suite
+├── reproduce_all.py            # Master Python orchestrator running full execution pipeline
+├── requirements.txt            # Python package dependency definitions
+└── LICENSE                     # Project License
 ```
 
 ---
 
-## 2. Setup Instructions
+## 4. Setup Instructions
 
 The repository relies on standard scientific Python libraries. A preconfigured virtual environment setup script is provided.
 
-### Prerequisites
-
-- Python 3.10 or higher
-- GCC (required to compile the information theory package `dit`)
-
 ### Virtual Environment Setup
 
-To create the virtual environment and install all dependencies:
+To create the virtual environment and install all dependencies automatically:
 
 ```bash
 chmod +x setup.sh
@@ -81,88 +104,124 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### Verifying the Setup
+### Setup Verification Step
 
-Verify that all modules can import correctly and the environment is operational by running the test execution coordinator:
+Before running any experiments, verify that the virtual environment is correctly built and dependencies compile without issues:
 
 ```bash
 source .venv/bin/activate
-python3 reproduce_all.py
+python3 -c "import dit, sklearn, numpy, scipy; print('Environment OK')"
 ```
 
-This sequentially runs a full verification pass, which executes all experiments, verifies mathematical consistency, profile resource usage, and regenerates publication-ready figures.
+If it prints `Environment OK`, all dependencies (including compiled C extensions for `dit`) are ready.
 
 ---
 
-## 3. Reproducing Paper Results
+## 5. Quick Verification Run
 
-The table below maps each paper table and figure to the exact script command that reproduces it:
-
-| Paper Element | Description | Execution Command |
-|---|---|---|
-| Table I | Classification Performance (AUC, MCC, F1, Brier) | `python scripts/run_soma_evaluation.py` |
-| Table II | Synergy Ratio (SR) Diagnostic and 95% Confidence Intervals | `python scripts/run_sr_diagnostic.py` (Primary) <br> `python scripts/run_full_experiments.py` (Promise) |
-| Table III | Synergy Ratio Estimator Consistency Check (BROJA, Imin, CoI) | `python experiments/multi_estimator_sr.py` |
-| Table IV | Feature Ablation study (Full 12D vs 3D) and Paired t-Test | `python scripts/run_ablation.py` |
-| Figure 1 | Distribution of PID Information Atoms per dataset | `python scripts/generate_figures.py` |
-| Figure 2 | Synergy Ratio vs SOMA to XGBoost Performance Gap | `python scripts/generate_figures.py` |
-| Figure 3 | AUC Model Comparison across datasets | `python scripts/generate_figures.py` |
-| Figure 4 | Paired t-test Ablation Results | `python scripts/generate_figures.py` |
-| Figure 5 | Synergy Ratio Thresholds Overview | `python scripts/generate_figures.py` |
-
-To run the entire pipeline at once, execute the master shell script:
+To verify the pipeline execution on a lightweight task before running full benchmarks, execute the diagnostic utility on the synthetic dataset:
 
 ```bash
+source .venv/bin/activate
+python scripts/run_sr_diagnostic.py --dataset synthetic
+```
+
+- **Expected Output**: The script prints the Synergy Ratio value, 95% Confidence Intervals, and PID atom breakdown (redundancy, unique info, synergy) to the console.
+- **Expected Runtime**: Under 60 seconds on a standard modern CPU.
+
+---
+
+## 6. Reproducing Paper Results
+
+The table below maps each paper table and figure to the exact script command that reproduces it.
+
+**Dependency Order**: Run the evaluation scripts (e.g. `run_soma_evaluation.py`, `run_full_experiments.py`, `multi_estimator_sr.py`, `run_ablation.py`) first. These scripts save intermediate JSON result files to `results/tables/`. The figure generator script `generate_figures.py` loads these intermediate results to plot the publication-ready graphics. Therefore, running `generate_figures.py` before executing the evaluations will raise file-not-found errors.
+
+| Paper Element | Description | Execution Command | Expected Output | Expected Runtime (8-core CPU) |
+|---|---|---|---|---|
+| Table I | Classification Performance (AUC, MCC, F1, Brier) | `python scripts/run_soma_evaluation.py` | Outputs metrics table to console; saves JSON results to `results/tables/experiment_results.json` | ~15 minutes |
+| Table II (Top) | Synergy Ratio (SR) Diagnostic on Primary Datasets | `python scripts/run_sr_diagnostic.py` | Prints SR value, 95% CI, and PID atom breakdown to console; saves to `results/tables/broja_sr_results.json` | ~3 minutes |
+| Table II (Bottom) | Synergy Ratio (SR) Diagnostic on NASA Software defect datasets | `python scripts/run_full_experiments.py` | Prints SR and SOMA evaluation statistics to console | ~2 minutes |
+| Table III | Synergy Ratio Estimator Consistency Check (BROJA, Imin, CoI) | `python experiments/multi_estimator_sr.py` | Prints consistency table comparing estimators to console; saves JSON to `results/tables/multi_estimator_sr.json` | ~15 seconds |
+| Table IV | Feature Ablation study (Full 12D vs 3D) and Paired t-Test | `python scripts/run_ablation.py` | Prints paired t-test results and p-values to console | ~2 minutes |
+| Figures 1–5 | Generation of all publication-ready PNG figures | `python scripts/generate_figures.py` | Generates 5 PNG files saved under `results/figures/` | ~5 seconds |
+
+### Full Replication Execution
+
+To execute the entire verification pipeline at once, run:
+
+```bash
+chmod +x reproduce_all.sh
 ./reproduce_all.sh
 ```
 
+`reproduce_all.py` is the actual Python execution orchestrator. `reproduce_all.sh` is a shell wrapper that activates the virtual environment `.venv` and then executes `reproduce_all.py`. Running `./reproduce_all.sh` executes the entire pipeline, including all setup verifications and experiment runs, in approximately 10 minutes.
+
 ---
 
-## 4. File-by-File Reference
+## 7. File-by-File Reference
 
 | File Path | Purpose | Paper Reference |
 |---|---|---|
-| `sr_computation/pid_decomposition.py` | Implements Partial Information Decomposition (PID), Williams-Beer $I_{\min}$, and Synergy Ratio (SR) bootstraps | Section III (Equations 1-5), Algorithm 1 |
+| `sr_computation/pid_decomposition.py` | Implements Partial Information Decomposition (PID), Williams-Beer $I_{\min}$, and Synergy Ratio (SR) bootstraps | Section III (Equations 1–5), Algorithm 1 |
 | `soma_classifier/entropy_features.py` | Quantile discretization and 12D entropy-KL meta-feature vector construction | Section IV (Equation 6) |
 | `soma_classifier/bilevel_sgd.py` | Specialist training (inner SGDs) and Generalist Meta-Classifier (outer SGD) | Section IV (Algorithms 2 and 3) |
 | `datasets/promise_loader_base.py` | Shared utility base class for loading software defect metrics | Section VI-E |
-| `experiments/multi_estimator_sr.py` | Verifies SR stability across different mutual information estimators | Section V-D (Table III) |
-| `experiments/benchmark_efficiency.py` | Measures execution speed, model parameter sizes, and memory usage | Section VI-D, Section V-E |
+| `datasets/ai4i/loader.py` | Loads and groups features for the AI4I 2020 predictive maintenance benchmark | Section V-A |
+| `datasets/cmapss/loader.py` | Standardizes turbofan degradation telemetry data and computes binary labels | Section V-A |
+| `datasets/smd/loader.py` | Normalizes Server Machine Dataset telemetry and partitions groups | Section V-A |
+| `datasets/synthetic/loader.py` | Simulates a controllable cascading pipeline (Broker, Consumer, Network) | Section V-A |
+| `datasets/cm1/loader.py` | Metric mapping loader for the NASA CM1 defect dataset | Section VI-E |
+| `datasets/jm1/loader.py` | Metric mapping loader for the NASA JM1 defect dataset | Section VI-E |
+| `datasets/pc1/loader.py` | Metric mapping loader for the NASA PC1 defect dataset | Section VI-E |
+| `datasets/mc2/loader.py` | Metric mapping loader for the NASA MC2 defect dataset | Section VI-E |
+| `scripts/run_sr_diagnostic.py` | CLI diagnostic interface to run the SR diagnostic on any registered dataset | Section III, Section VI-B |
+| `scripts/run_soma_evaluation.py` | Runs SOMA classification benchmarks against standard models | Section VI-B (Table I) |
+| `scripts/run_ablation.py` | Conducts SOMA feature ablation and t-test statistics | Section VI-D (Table IV) |
+| `scripts/generate_figures.py` | Renders publication-ready matplotlib visual figures | Figures 1 to 5 |
+| `scripts/run_all.py` | Execution runner driving the SOMA evaluation loops | Section VI |
+| `scripts/run_full_experiments.py` | Runs the SOMA evaluations on the NASA Promise defect datasets | Section VI-E (Table II) |
+| `experiments/multi_estimator_sr.py` | Computes the mutual information and synergy ratio under BROJA, Imin, and Co-Info | Section V-D (Table III) |
+| `experiments/benchmark_efficiency.py` | Measures execution latency, model file sizes, and memory usage | Section VI-D, Section V-E |
 
 ---
 
-## 5. Datasets
+## 8. Datasets
 
 The repository includes a diverse set of industrial predictive maintenance and software defect datasets:
 
 1. **AI4I 2020 Predictive Maintenance Dataset (`datasets/ai4i/`)**
    - *Source:* UCI Machine Learning Repository (ID 601).
-   - *Structure:* 10,000 tool logs, grouped into 3 telemetry groups (Thermal, Mechanical, Wear).
+   - *URL*: [https://archive.ics.uci.edu/ml/datasets/AI4I+2020+Predictive+Maintenance+Dataset](https://archive.ics.uci.edu/ml/datasets/AI4I+2020+Predictive+Maintenance+Dataset)
+   - *Installation*: The CSV file `ai4i_2020.csv` is fully included in the repository at `datasets/ai4i/ai4i_2020.csv`.
    - *Preprocessing:* Continuous columns are quantile-discretized into $B=8$ bins for diagnostic computation.
 
 2. **NASA C-MAPSS Turbofan Degradation Dataset (`datasets/cmapss/`)**
    - *Source:* NASA Prognostics Data Repository (FD001).
-   - *Structure:* 25,759 sensor readings grouped into 3 groups (Temperature, Pressure, Speed).
+   - *URL*: [https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/#turbofan](https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/#turbofan)
+   - *Installation*: A synthetic subset is already included in `datasets/cmapss/CMAPSSData/train_FD001.txt`. To run on the full NASA repository dataset: download the C-MAPSS dataset from the URL, unzip it, and place `train_FD001.txt` inside `datasets/cmapss/CMAPSSData/`.
    - *Preprocessing:* Features normalized; remaining Useful Life (RUL) thresholded to binary failure labels.
-   - *Note:* Due to file size restrictions, the repository contains a compressed subset for immediate verification. The complete public dataset can be downloaded from the NASA Prognostics Repository.
 
 3. **Server Machine Dataset (SMD) (`datasets/smd/`)**
-   - *Source:* Public system monitoring logs from a large internet company.
-   - *Structure:* Telemetry timeseries split into Compute, Memory, and Network groups.
+   - *Source:* NetManAIOps ServerMachineDataset.
+   - *URL*: [https://github.com/NetManAIOps/Anomaly-Decct/tree/master/ServerMachineDataset](https://github.com/NetManAIOps/Anomaly-Decct/tree/master/ServerMachineDataset)
+   - *Installation*: The sliding anomaly subsets are fully preprocessed and pre-loaded in `datasets/smd/SMD/`. No additional download is required for replication.
    - *Preprocessing:* Downsampled to 9,950 points with sliding anomaly labels.
 
 4. **Synthetic Cascading Synergy Dataset (`datasets/synthetic/`)**
    - *Source:* Generative simulator included in the repository.
-   - *Structure:* Simulates a multi-layered software pipeline (Broker, Consumer, Network) with cascading failure delays.
+   - *Installation*: Auto-generated at runtime; no download required.
+   - *Preprocessing*: Simulates a multi-layered software pipeline (Broker, Consumer, Network) with cascading failure delays.
 
 5. **NASA Software Defect Datasets (`datasets/cm1/`, `datasets/jm1/`, `datasets/pc1/`, `datasets/mc2/`)**
    - *Source:* Open Science Promise Repository.
-   - *Structure:* Code metrics grouped into Halstead, Complexity, and McCabe code volumes.
+   - *URL*: [http://promise.site.uottawa.ca/SERepository/](http://promise.site.uottawa.ca/SERepository/)
+   - *Installation*: The ARFF files (`CM1.arff`, `JM1.arff`, `PC1.arff`, `MC2.arff`) are fully included in the repository inside their respective dataset folders. No additional download is required.
    - *Preprocessing:* Null entries and duplicate rows removed; labels represent defective functions.
 
 ---
 
-## 6. Hyperparameter Reference
+## 9. Hyperparameter Reference
 
 The table below lists every configuration value used in SOMA, its setting, and the paper section that specifies it:
 
@@ -181,7 +240,7 @@ The table below lists every configuration value used in SOMA, its setting, and t
 
 ---
 
-## 7. Known Limitations and Reproducibility Notes
+## 10. Known Limitations and Reproducibility Notes
 
 - **BROJA/NumPy 2.x Compatibility:** The `dit` package (used for BROJA PID calculations) relies on deprecated NumPy functions (`np.alltrue`, `np.product`) that were removed in NumPy 2.x. This repository injects load-time patches (`np.alltrue = np.all`, etc.) in `sr_computation/pid_decomposition.py` and `experiments/multi_estimator_sr.py` to guarantee seamless compatibility with modern Python environments.
 - **Imin Fallback:** If the `dit` package is missing or fails, the pipeline automatically falls back to the Williams-Beer $I_{\min}$ estimator.
@@ -190,6 +249,6 @@ The table below lists every configuration value used in SOMA, its setting, and t
 
 ---
 
-## 8. License
+## 11. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
