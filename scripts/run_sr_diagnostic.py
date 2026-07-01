@@ -53,6 +53,12 @@ def main():
         help="Number of bootstrap iterations for 95% Confidence Interval (default: 50, chosen for execution speed)."
     )
     
+    parser.add_argument(
+        "--use-broja",
+        action="store_true",
+        help="Use the BROJA estimator via the dit library (computationally/memory intensive) instead of the default Williams-Beer I_min estimator."
+    )
+    
     args = parser.parse_args()
     selected_ds = args.dataset
 
@@ -61,14 +67,17 @@ def main():
     else:
         datasets_to_run = [selected_ds]
 
-    # Try to use dit/BROJA if available, otherwise fallback to I_min
+    # Use dit/BROJA only if requested, otherwise default to I_min
     use_dit = False
-    try:
-        import dit
-        use_dit = True
-        print("[✓] 'dit' library found. Using BROJA estimator.")
-    except ImportError:
-        print("[!] 'dit' library not found. Falling back to Williams-Beer I_min estimator.")
+    if args.use_broja:
+        try:
+            import dit
+            use_dit = True
+            print("[✓] 'dit' library found. Using BROJA estimator.")
+        except ImportError:
+            print("[!] 'dit' library not found. Falling back to Williams-Beer I_min estimator.")
+    else:
+        print("[*] Using default Williams-Beer I_min estimator (highly lightweight and fast).")
 
     for ds in datasets_to_run:
         print(f"\n[*] Loading dataset: {ds}...")

@@ -151,7 +151,7 @@ To verify the pipeline execution on a lightweight task before running full bench
   ```
 
 - **Expected Output**: The script prints the Synergy Ratio value, 95% Confidence Intervals, and PID atom breakdown (redundancy, unique info, synergy) to the console.
-- **Expected Runtime**: Under 3 minutes on a standard modern CPU (as the BROJA estimator solver runs and safely falls back to the Williams-Beer I_min estimator).
+- **Expected Runtime**: Under 15 seconds on a standard modern CPU (as the script defaults to the highly lightweight Williams-Beer I_min estimator).
 
 ---
 
@@ -164,11 +164,18 @@ The table below maps each paper table and figure to the exact script command tha
 | Paper Element | Description | Execution Command (Linux/macOS) | Windows Command | Expected Output | Expected Runtime (8-core CPU) |
 |---|---|---|---|---|---|
 | Table I | Classification Performance (AUC, MCC, F1, Brier) | `python scripts/run_soma_evaluation.py` | `python scripts\run_soma_evaluation.py` | Outputs metrics table; saves JSON to `results/tables/experiment_results.json` | ~15 minutes |
-| Table II (Top) | Synergy Ratio (SR) Diagnostic on Primary Datasets | `python scripts/run_sr_diagnostic.py` | `python scripts\run_sr_diagnostic.py` | Prints SR value, 95% CI, and PID atom breakdown (defaults to running all 8 datasets sequentially); saves to `results/tables/broja_sr_results.json` | ~3 minutes |
+| Table II (Top) | Synergy Ratio (SR) Diagnostic on Primary Datasets | `python scripts/run_sr_diagnostic.py` | `python scripts\run_sr_diagnostic.py` | Prints SR value, 95% CI, and PID atom breakdown (defaults to running all 8 datasets sequentially using fast I_min); saves to `results/tables/broja_sr_results.json` | ~60 seconds |
 | Table II (Bottom) | Synergy Ratio (SR) Diagnostic on NASA Defect datasets | `python scripts/run_full_experiments.py` | `python scripts\run_full_experiments.py` | Prints SR and SOMA evaluation statistics to console | ~2 minutes |
-| Table III | Synergy Ratio Estimator Consistency Check | `python experiments/multi_estimator_sr.py` | `python experiments\multi_estimator_sr.py` | Prints consistency table; saves JSON to `results/tables/multi_estimator_sr.json` | ~15 seconds |
+| Table III | Synergy Ratio Estimator Consistency Check | `python experiments/multi_estimator_sr.py` | `python experiments\multi_estimator_sr.py` | Prints consistency table comparing BROJA (with PCA state reduction), Imin, and CoI; saves JSON to `results/tables/multi_estimator_sr.json` | ~15 seconds |
 | Table IV | Feature Ablation study and Paired t-Test | `python scripts/run_ablation.py` | `python scripts\run_ablation.py` | Prints paired t-test results and p-values to console | ~2 minutes |
 | Figures 1–5 | Generation of all publication-ready PNG figures | `python scripts/generate_figures.py` | `python scripts\generate_figures.py` | Generates 5 PNG files saved under `results/figures/` | ~5 seconds |
+
+> [!NOTE]
+> **Estimator Overhead & Options**:
+> * **Default (I_min)**: By default, `run_sr_diagnostic.py` runs using the Williams-Beer $I_{\min}$ estimator, completing all 8 datasets in under 60 seconds on standard laptops without CPU/RAM throttling.
+> * **BROJA Option**: Reviewers who want to test the computationally/memory-intensive BROJA estimator on the full feature space can run `python scripts/run_sr_diagnostic.py --use-broja`. Note that BROJA solves a convex optimization problem scaling exponentially with feature dimension; on standard hardware, this can hang or run out of memory.
+> * **Lightweight BROJA Comparison**: To test BROJA safely and quickly, run `python experiments/multi_estimator_sr.py`. This script compares BROJA, $I_{\min}$, and CoI by applying PCA dimensionality reduction to keep the state space tractable (completing in ~15 seconds).
+
 
 ### Full Replication Execution
 
