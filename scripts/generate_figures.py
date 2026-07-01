@@ -379,36 +379,40 @@ print("  ✓ fig4_ablation.png")
 
 
 # ════════════════════════════════════════════════
-# FIG 5: Synergy Ratio Overview — The Hero Figure
+# FIG 5: Synergy Ratio Overview — NASA Promise datasets only
 # ════════════════════════════════════════════════
-fig, ax = plt.subplots(figsize=(10, 5))
+NASA_DATASETS = ["JM1", "PC1", "CM1", "MC2"]
+# Only keep datasets present in the results JSON
+fig5_datasets = [ds for ds in NASA_DATASETS if ds in data]
 
-sr_vals = [data[ds]["synergy_ratio"] for ds in datasets]
-bar_colors_sr = [C_RED if sr > 0.15 else (C_ORANGE if sr > 0.05 else C_BLUE) for sr in sr_vals]
+fig, ax = plt.subplots(figsize=(7, 5))
 
-bars = ax.bar(range(len(datasets)), sr_vals, color=bar_colors_sr, width=0.5,
+sr_vals5 = [data[ds]["synergy_ratio"] for ds in fig5_datasets]
+bar_colors_sr = [C_RED if sr > 0.15 else (C_ORANGE if sr > 0.05 else C_BLUE) for sr in sr_vals5]
+
+bars = ax.bar(range(len(fig5_datasets)), sr_vals5, color=bar_colors_sr, width=0.5,
               edgecolor='white', linewidth=1.5)
 
 # Add value labels
-for bar, sr in zip(bars, sr_vals):
-    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
+for bar, sr in zip(bars, sr_vals5):
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005,
             f'SR = {sr:.3f}', ha='center', fontsize=12, fontweight='bold')
 
 # Threshold lines
 ax.axhline(y=0.05, color=C_ORANGE, linewidth=1.5, linestyle='--', alpha=0.6)
 ax.axhline(y=0.15, color=C_RED, linewidth=1.5, linestyle='--', alpha=0.6)
-ax.text(len(datasets) - 0.3, 0.06, 'Moderate\nthreshold', fontsize=8, color=C_ORANGE, ha='center')
-ax.text(len(datasets) - 0.3, 0.16, 'High\nthreshold', fontsize=8, color=C_RED, ha='center')
+ax.text(len(fig5_datasets) - 0.3, 0.055, 'Moderate\nthreshold', fontsize=8, color=C_ORANGE, ha='center')
+ax.text(len(fig5_datasets) - 0.3, 0.155, 'High\nthreshold', fontsize=8, color=C_RED, ha='center')
 
 # Zone labels
-ax.axhspan(-0.1, 0.05, alpha=0.04, color=C_BLUE)
+ax.axhspan(-0.05, 0.05, alpha=0.04, color=C_BLUE)
 ax.axhspan(0.05, 0.15, alpha=0.04, color=C_ORANGE)
 
-ax.set_xticks(range(len(datasets)))
-ax.set_xticklabels([get_short_name(ds) for ds in datasets], fontsize=12, fontweight='bold')
-ax.set_ylabel(r"I$_{\min}$-SR", fontsize=13)
-ax.set_title(r"Cross-Dataset I$_{\min}$-SR Comparison", fontsize=14, fontweight='bold')
-ax.set_ylim(0, max(sr_vals) * 1.15)
+ax.set_xticks(range(len(fig5_datasets)))
+ax.set_xticklabels(fig5_datasets, fontsize=13, fontweight='bold')
+ax.set_ylabel("Imin-SR  (Synergy Ratio)", fontsize=13)
+ax.set_title("Cross-Dataset Imin-SR Comparison\n(NASA Promise Datasets)", fontsize=14, fontweight='bold')
+ax.set_ylim(0, max(sr_vals5) * 1.25)
 
 # Legend
 legend_patches = [
